@@ -23,6 +23,8 @@ package ro.ciacob.maidens.legacy.constants {
 		public static const AUDIO_ASSET_FILE_TYPE:String = '.swf';
 		public static const AUDIO_WORKER_FILE_KEY : int = 653;
 		public static const AUDIO_WORKER_FILE_LABEL : String = 'Audio Synthesis Engine';
+		public static const DEFAULT_SOUNDS_FILE_KEY : int = 951;
+		public static const DEFAULT_SOUNDS_FILE_LABEL : String = 'Default Sounds Library';
 
 		public static function get CONTENT_DIR():File {
 			return _resolveAppDirPath('%appdir%/assets/content/');
