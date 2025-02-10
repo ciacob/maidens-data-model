@@ -27,6 +27,9 @@ import ro.ciacob.math.Fraction;
 import ro.ciacob.utils.Descriptor;
 import ro.ciacob.utils.Templates;
 import ro.ciacob.utils.constants.CommonStrings;
+import ro.ciacob.utils.ConstantUtils;
+import ro.ciacob.maidens.generators.constants.parts.PartNames;
+import ro.ciacob.maidens.generators.constants.parts.GMPartMidiPatches;
 
 use namespace ciacob;
 
@@ -326,6 +329,8 @@ public class BaseABCExporter implements IExporter {
                 (CommonStrings.SPACE + (ordIdx + 1)) : '');
         var abbrevName:String = abbrev.concat(mustShowOrdNum ? (CommonStrings.SPACE + (ordIdx +
                 1)) : '');
+        var patchNumber:int = _getMidiPatch (partData);
+        var channelIndex:int = _getMidiChannel (staffIndex);
         var clefsList:Array = (partData[DataFields.PART_CLEFS_LIST] as Array);
         var clef:String = ABCTranslator.translateClef(clefsList[staffIndex]);
         var transposition:String = (partData[DataFields.PART_TRANSPOSITION] as int).toString();
@@ -335,6 +340,8 @@ public class BaseABCExporter implements IExporter {
         staff['abrevName'] = abbrevName;
         staff['clef'] = clef;
         staff['transposition'] = transposition;
+        staff['patchNumber'] = patchNumber;
+        staff['channelIndex'] = channelIndex;
         stavesUidDictionary[staffUid] = staff;
         (target['staves'] as Array).push(staff);
     }
@@ -594,6 +601,30 @@ public class BaseABCExporter implements IExporter {
      */
     protected function provideMeasuresStorage(staff:Object):Array {
         return [];
+    }
+
+    private function _getMidiPatch (partData : Object) : int {
+        var patch : int = 1;;
+        try {
+            var cleanPartName : String = partData[DataFields.PART_NAME].split(CommonStrings.BROKEN_VERTICAL_BAR).pop();
+            var partInternalName : String = ConstantUtils.getNamesByMatchingValue(PartNames, cleanPartName)[0];
+
+            // Adapt to `abc2xml.py` expecting patch number be zero-based
+            patch = GMPartMidiPatches[partInternalName] - 1;
+        } catch (e:Error) {
+            trace ('BaseAbcExporter:_getMidiPatch() failed and defaulted to `1`. Error: ' +
+                e.message +
+                '\npartData:\n' +
+                JSON.stringify (partData, null, '\t')
+            );
+        }
+        return patch;
+    }
+
+    private function _getMidiChannel (staffIndex : int) : int {
+        // Skipping channel 10, which is traditionally assigned to unpitched
+        // percussion instruments, which MAIDENS does not have.
+        return (staffIndex < 10)? staffIndex + 1 : staffIndex + 2;
     }
 
     private function _onTimeSignatureReady(timeSignature:Array):void {
