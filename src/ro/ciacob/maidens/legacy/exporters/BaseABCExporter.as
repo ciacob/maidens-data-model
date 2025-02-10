@@ -56,8 +56,11 @@ public class BaseABCExporter implements IExporter {
     protected var lastTupletMarker:TupletMarker;
     protected var paddingDurations:Array;
 
+    protected var currentMidiChannel : int;
+
     public function BaseABCExporter() {
         super();
+        currentMidiChannel = 0;
     }
 
     /**
@@ -329,8 +332,8 @@ public class BaseABCExporter implements IExporter {
                 (CommonStrings.SPACE + (ordIdx + 1)) : '');
         var abbrevName:String = abbrev.concat(mustShowOrdNum ? (CommonStrings.SPACE + (ordIdx +
                 1)) : '');
-        var patchNumber:int = _getMidiPatch (partData);
-        var channelIndex:int = _getMidiChannel (staffIndex);
+        var patchNumber:String = _getMidiPatch (partData);
+        var channelIndex:String = _getNextMidiChannel ();
         var clefsList:Array = (partData[DataFields.PART_CLEFS_LIST] as Array);
         var clef:String = ABCTranslator.translateClef(clefsList[staffIndex]);
         var transposition:String = (partData[DataFields.PART_TRANSPOSITION] as int).toString();
@@ -603,7 +606,7 @@ public class BaseABCExporter implements IExporter {
         return [];
     }
 
-    private function _getMidiPatch (partData : Object) : int {
+    private function _getMidiPatch (partData : Object) : String {
         var patch : int = 1;;
         try {
             var cleanPartName : String = partData[DataFields.PART_NAME].split(CommonStrings.BROKEN_VERTICAL_BAR).pop();
@@ -618,13 +621,13 @@ public class BaseABCExporter implements IExporter {
                 JSON.stringify (partData, null, '\t')
             );
         }
-        return patch;
+        return patch.toString();
     }
 
-    private function _getMidiChannel (staffIndex : int) : int {
+    private function _getNextMidiChannel () : String {
         // Skipping channel 10, which is traditionally assigned to unpitched
         // percussion instruments, which MAIDENS does not have.
-        return (staffIndex < 10)? staffIndex + 1 : staffIndex + 2;
+        return ((++currentMidiChannel < 10)? currentMidiChannel : currentMidiChannel + 1).toString();
     }
 
     private function _onTimeSignatureReady(timeSignature:Array):void {
