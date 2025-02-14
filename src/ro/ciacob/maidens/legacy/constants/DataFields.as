@@ -35,6 +35,7 @@ package ro.ciacob.maidens.legacy.constants {
 		public static const GENERATORS:String = 'generators';
 		public static const INDEX_CONTAINER:String = 'indexContainer';
 		public static const INDEX_UID:String = 'INDEX_UID';
+		public static const IS_PRISTINE:String = 'isPristine';
 		public static const MEASURE:String = 'measure';
 		public static const MODIFICATION_TIMESTAMP:String = 'modificationTimestamp';
 		public static const NOTE:String = 'note';
