@@ -75,7 +75,7 @@ public class BaseABCExporter implements IExporter {
 
         MeasurePaddingMarker.reset();
         var templateData:Object = buildTemplateData(ProjectData(project));
-        return Templates.fillSimpleTemplate(abcTemplateFile, templateData);
+        return Templates.fillSimpleTemplate(templateFile, templateData);
     }
 
     /**
@@ -86,7 +86,7 @@ public class BaseABCExporter implements IExporter {
      *
      * @return An existing file.
      */
-    protected function get abcTemplateFile():File {
+    protected function get templateFile():File {
         return null;
     }
 

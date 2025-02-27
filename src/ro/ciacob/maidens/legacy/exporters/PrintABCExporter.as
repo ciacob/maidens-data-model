@@ -15,7 +15,7 @@ public class PrintABCExporter extends VisualABCExporter {
         super();
     }
 
-    override protected function get abcTemplateFile():File {
+    override protected function get templateFile():File {
         return FileAssets.TEMPLATES_DIR.resolvePath(FileAssets.ABC_PRINT);
     }
 }

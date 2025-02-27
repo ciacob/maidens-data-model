@@ -5,7 +5,7 @@ package ro.ciacob.maidens.legacy.exporters {
 
     public class AudioABCExporter extends BaseABCExporter {
 
-        override protected function get abcTemplateFile():File {
+        override protected function get templateFile():File {
             return FileAssets.TEMPLATES_DIR.resolvePath(FileAssets.ABC_AUDIO);
         }
     }
