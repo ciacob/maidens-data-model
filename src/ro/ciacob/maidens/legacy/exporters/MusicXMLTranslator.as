@@ -1,14 +1,8 @@
 package ro.ciacob.maidens.legacy.exporters {
     import ro.ciacob.maidens.generators.constants.ClefTypes;
-    import ro.ciacob.maidens.legacy.constants.DataFields;
-    import ro.ciacob.utils.constants.CommonStrings;
-    import ro.ciacob.utils.ConstantUtils;
-    import ro.ciacob.maidens.generators.constants.parts.PartNames;
-    import ro.ciacob.maidens.generators.constants.parts.GMPartMidiPatches;
-    import ro.ciacob.maidens.legacy.ModelUtils;
 
-    public class ExporterUtils {
-        public function ExporterUtils() {
+    public class MusicXMLTranslator {
+        public function MusicXMLTranslator() {
             // Empty
         }
 

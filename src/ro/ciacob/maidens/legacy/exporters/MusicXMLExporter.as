@@ -25,7 +25,7 @@ package ro.ciacob.maidens.legacy.exporters {
      *
      * This class is responsible for exporting music data to the MusicXML format.
      */
-    public class MusicXMLExporter implements IExporter {
+    public class MusicXMLExporter extends AbstractExporter implements IExporter {
 
         private static const SCORE_WIDTH:String = "1239.96";
         private static const SCORE_HEIGHT:String = "1753.66";
@@ -59,17 +59,21 @@ package ro.ciacob.maidens.legacy.exporters {
          *          `toXMLString()` on the returned XML instance to obtain the actual content to be
          *          written to an *.xml file.
          */
-        public function export(data:DataElement, shallow:Boolean = false, isRecursiveCall:Boolean = false):* {
-            var projectData:ProjectData;
-            if (data && (projectData = (data as ProjectData)) && ModelUtils.isProject(projectData)) {
+        override public function export(data:DataElement, shallow:Boolean = false, isRecursiveCall:Boolean = false):* {
+            var project:ProjectData = (data as ProjectData);
+            if (project && ModelUtils.isProject(project)) {
+                super.resetAll();
+                const interimData : Object = super.buildTemplateData(project);
+
+                trace (JSON.stringify (interimData, null, '\t'));
 
                 // TITLE
-                const title:String = projectData.getContent(DataFields.PROJECT_NAME) as String;
+                const title:String = project.getContent(DataFields.PROJECT_NAME) as String;
 
                 // IDENTIFICATION
                 // Creators
                 const creators:Vector.<Creator> = new Vector.<Creator>;
-                const composerName:String = projectData.getContent(DataFields.COMPOSER_NAME) as String;
+                const composerName:String = project.getContent(DataFields.COMPOSER_NAME) as String;
                 if (composerName && composerName !== DataFields.VALUE_NOT_SET) {
                     creators.push(new Creator('composer', composerName));
                 }
@@ -78,7 +82,7 @@ package ro.ciacob.maidens.legacy.exporters {
                 const defaultTime:String = Time.toFormat(Time.now, Time.TIMESTAMP_DEFAULT);
                 const encoder:String = Descriptor.getAppSignature(true);
 
-                var encodingDate:String = projectData.getContent(DataFields.MODIFICATION_TIMESTAMP) as String;
+                var encodingDate:String = project.getContent(DataFields.MODIFICATION_TIMESTAMP) as String;
                 if (!encodingDate || encodingDate === DataFields.VALUE_NOT_SET) {
                     encodingDate = defaultTime;
                 }
@@ -86,12 +90,12 @@ package ro.ciacob.maidens.legacy.exporters {
                 // Miscellaneous
                 const misc:Vector.<Misc> = new Vector.<Misc>;
 
-                var creationTime:String = projectData.getContent(DataFields.CREATION_TIMESTAMP) as String;
+                var creationTime:String = project.getContent(DataFields.CREATION_TIMESTAMP) as String;
                 if (!creationTime || creationTime === DataFields.VALUE_NOT_SET) {
                     creationTime = defaultTime;
                 }
 
-                var modificationTime:String = projectData.getContent(DataFields.MODIFICATION_TIMESTAMP) as String;
+                var modificationTime:String = project.getContent(DataFields.MODIFICATION_TIMESTAMP) as String;
                 if (!modificationTime || modificationTime === DataFields.VALUE_NOT_SET) {
                     modificationTime = defaultTime;
                 }
@@ -101,12 +105,12 @@ package ro.ciacob.maidens.legacy.exporters {
                         new Misc("modification timestamp", modificationTime)
                     );
 
-                var copyrightNote:String = projectData.getContent(DataFields.COPYRIGHT_NOTE) as String;
+                var copyrightNote:String = project.getContent(DataFields.COPYRIGHT_NOTE) as String;
                 if (copyrightNote && copyrightNote !== DataFields.VALUE_NOT_SET) {
                     misc.push(new Misc("copyright note", copyrightNote));
                 }
 
-                var customNotes:String = projectData.getContent(DataFields.CUSTOM_NOTES) as String;
+                var customNotes:String = project.getContent(DataFields.CUSTOM_NOTES) as String;
                 if (customNotes && customNotes !== DataFields.VALUE_NOT_SET) {
                     misc.push(new Misc("custom notes", customNotes));
                 }
@@ -118,9 +122,9 @@ package ro.ciacob.maidens.legacy.exporters {
                         title, identification,
                         SCORE_WIDTH, SCORE_HEIGHT,
                         SCORE_MARGINS, SCORE_SCALING,
-                        _buildPartsInfo(projectData), 
-                        _buildPartsContent(projectData),
-                        _buildGroupsInfo(projectData)
+                        _buildPartsInfo(project), 
+                        _buildPartsContent(project),
+                        _buildGroupsInfo(project)
                     );
                 return MusicXMLBuilder.buildScore(score);
 

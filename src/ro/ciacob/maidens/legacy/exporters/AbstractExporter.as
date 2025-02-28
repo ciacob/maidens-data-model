@@ -21,7 +21,24 @@ package ro.ciacob.maidens.legacy.exporters {
     import ro.ciacob.maidens.generators.constants.pitch.PitchAlterationTypes;
     import eu.claudius.iacob.maidens.constants.ViewPipes;
 
+    /**
+     * Provides a generic framework for implementing specific exporters.
+     * An "exporter" class is one that takes as input the internal MAIDENS data model
+     * that represents a musical score and produces, as output, an equivalent score in
+     * a different format, e.g., "Music ABC" or "MusicXML".
+     */
     public class AbstractExporter implements IExporter {
+        protected static const BAR:String = 'bar';
+        protected static const CHARSET:String = 'utf-8';
+        protected static const CREATOR_SOFTWARE:String = 'creatorSoftware';
+        protected static const SCORE_BACKGROUND:String = 'scoreBackground';
+        protected static const SCORE_FOREGROUND:String = 'scoreForeground';
+        protected static const EVENTS:String = 'events';
+        protected static const MEASURES:String = 'measures';
+        protected static const SECTIONS:String = 'sections';
+        protected static const SECTION_NAME:String = 'name';
+        protected static const TIME_SIGNATURE:String = 'timeSignature';
+
         protected const SUBSCRIBE:Function = PTT.getPipe().subscribe;
         protected const SEND:Function = PTT.getPipe().send;
         protected const UNSUBSCRIBE:Function = PTT.getPipe().unsubscribe;
@@ -34,7 +51,6 @@ package ro.ciacob.maidens.legacy.exporters {
         protected var timeSignature:Array = null;
         protected var lastTupletMarker:TupletMarker;
         protected var paddingDurations:Array;
-
         protected var currentMidiChannel:int;
 
         public function AbstractExporter() {
@@ -48,16 +64,26 @@ package ro.ciacob.maidens.legacy.exporters {
         /**
          * @see ro.ciacob.desktop.data.exporters.IExporter#export
          */
-        public function export(project:DataElement, shallow:Boolean = false, isRecursiveCall:Boolean = false):* {
+        public function export(data:DataElement, shallow:Boolean = false, isRecursiveCall:Boolean = false):* {
+            var project:ProjectData = (data as ProjectData);
+            if (project && ModelUtils.isProject(project)) {
+                resetAll();
+                var templateData:Object = buildTemplateData(project);
+                return Templates.fillSimpleTemplate(templateFile, templateData);
+            }
+            return null;
+        }
+
+        /**
+         * Resets all internal storage and context, readying the class for a new export operation.
+         */
+        protected function resetAll():void {
             persistentAlterations = {};
             pitchesMap = {};
             stavesUidDictionary = {};
-            timeSignature = null;
             lastTupletMarker = null;
-
+            timeSignature = null;
             MeasurePaddingMarker.reset();
-            var templateData:Object = buildTemplateData(ProjectData(project));
-            return Templates.fillSimpleTemplate(templateFile, templateData);
         }
 
         /**
@@ -80,7 +106,7 @@ package ro.ciacob.maidens.legacy.exporters {
          * "music body" (by providing measures, notes and so on).
          *
          * @param    project
-         *           The project to extract information from.
+         *           The project to extract information from, if needed.
          */
         protected function buildBodyData(project:ProjectData):void {
             var partUid:String;
@@ -645,10 +671,10 @@ package ro.ciacob.maidens.legacy.exporters {
          *
          * @return	The translated note or an equivalent.
          */
-        protected function translateNote (
+        protected function translateNote(
                 duration:Fraction, pitchName:String,
                 alteration:int, octaveIndex:int, tie:Boolean = false
-            ) : String {
+            ):String {
             throw new Error("Method translateNote() must be overridden in a subclass.");
             return null;
         }
