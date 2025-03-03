@@ -16,6 +16,8 @@ package ro.ciacob.maidens.legacy.exporters {
     import eu.claudius.iacob.music.wrappers.Group;
     import eu.claudius.iacob.music.wrappers.PartContent;
     import eu.claudius.iacob.music.builders.MusicXMLBuilder;
+    import ro.ciacob.math.Fraction;
+    import flash.filesystem.File;
 
     /**
      * This file is part of the Maidens Data Model project.
@@ -43,7 +45,7 @@ package ro.ciacob.maidens.legacy.exporters {
          *
          * @param   data
          *          `DataElement` instance representing the root node of a MAIDENS project. The function
-         *          actually requires the use of the `ProjectData` subclass; `DataElement` was used to 
+         *          actually requires the use of the `ProjectData` subclass; `DataElement` was used to
          *          comply with the IExporter interface.
          *
          * @param   shallow
@@ -55,7 +57,7 @@ package ro.ciacob.maidens.legacy.exporters {
          *          Not used, included to comply with the IExporter interface.
          *
          * @return  Returns an XML instance if `data` is a non-null `ProjectData` instance pointing
-         *          to the root node of a MAIDENS project; otherwise returns `null`. Use 
+         *          to the root node of a MAIDENS project; otherwise returns `null`. Use
          *          `toXMLString()` on the returned XML instance to obtain the actual content to be
          *          written to an *.xml file.
          */
@@ -63,9 +65,10 @@ package ro.ciacob.maidens.legacy.exporters {
             var project:ProjectData = (data as ProjectData);
             if (project && ModelUtils.isProject(project)) {
                 super.resetAll();
-                const interimData : Object = super.buildTemplateData(project);
+                ModelUtils.updateUnifiedPartsList(project);
+                const interimData:Object = super.buildTemplateData(project);
 
-                trace (JSON.stringify (interimData, null, '\t'));
+                trace(JSON.stringify(interimData, null, '\t'));
 
                 // TITLE
                 const title:String = project.getContent(DataFields.PROJECT_NAME) as String;
@@ -118,17 +121,83 @@ package ro.ciacob.maidens.legacy.exporters {
                 const identification:Identification = new Identification(creators, encoder, encodingDate, misc);
 
                 // Assemble and return an equivalent Score instance.
-                const score : Score = new Score(
+                const score:Score = new Score(
                         title, identification,
                         SCORE_WIDTH, SCORE_HEIGHT,
                         SCORE_MARGINS, SCORE_SCALING,
-                        _buildPartsInfo(project), 
+                        _buildPartsInfo(project),
                         _buildPartsContent(project),
                         _buildGroupsInfo(project)
                     );
                 return MusicXMLBuilder.buildScore(score);
 
             }
+            return null;
+        }
+
+        /**
+         * Replaces XML special characters with their entity equivalents.
+         * @see AbstractExporter.sanitizeUserString
+         */
+        override protected function sanitizeUserString(str:String):String {
+            if (!str)
+                return ""; // Handle null or empty input safely
+
+            return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
+        }
+
+        /**
+         * Translates a MAIDENS clef symbol into a MusicXML format clef definition.
+         * @see AbstractExporter.translateClef
+         */
+        override protected function translateClef(clef:String):String {
+            return JSON.stringify(MusicXMLTranslator.toXMLClef(clef), null, '\t');
+        }
+
+        /**
+         * Translates a MAIDENS bar type into a MusicXML format bar type.
+         * @see AbstractExporter.translateBarType
+         */
+        override protected function translateBarType(barType:String):String {
+            return MusicXMLTranslator.toXMLBar(barType);
+        }
+
+        /**
+         * Translates a MAIDENS note into a Music XML format note.
+         * @see AbstractExporter.translateNote
+         */
+        override protected function translateNote (
+                duration:Fraction,
+                pitchName:String, alteration:int, octaveIndex:int,
+                tie:Boolean = false, dot:Fraction = null
+            ):String {
+            
+            return MusicXMLTranslator.toXMLNote (duration, pitchName, alteration, octaveIndex, tie, dot);
+        }
+
+        /**
+         * Translates a MAIDENS time signature into a MusicXML format time signature.
+         * @see AbstractExporter.translateTimeSignature
+         */
+        override protected function translateTimeSignature(timeSignature:Array):String {
+            return MusicXMLTranslator.toXMLTimeSignature(timeSignature);
+        }
+
+        /**
+         * Translates a MAIDENS rest into a MusicXML format rest.
+         */
+        override protected function translateRest(duration:Fraction, visibleRest:Boolean = true):String {
+            return MusicXMLTranslator.toXMLNote (duration);
+        }
+
+        /**
+         * Overridden to satisfy superclass constraint, but not needed.
+         */
+        override protected function get templateFile():File {
             return null;
         }
 
@@ -152,5 +221,6 @@ package ro.ciacob.maidens.legacy.exporters {
 
             return content;
         }
+
     }
 }

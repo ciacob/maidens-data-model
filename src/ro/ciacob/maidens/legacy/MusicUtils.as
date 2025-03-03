@@ -416,14 +416,14 @@ public final class MusicUtils {
      * By best effort, replaces (numerous) repeating Clusters having the same pitch(s) with
      * (fewer) Clusters, ideally only one, having their cumulated duration. We will not cumulate
      * if this would violate:
-     * - tupplet boundaries;
+     * - tuplet boundaries;
      * - common durations (single and double dot is acceptable);
      * - Measure (in fact Voice) boundaries.
      *
      * @param    sourceMaterial
      *            Any container of Clusters
      *    @param    onlyIfTied
-     *            Optional, defaults to "false". If true, will only consolidate if the neighbour
+     *            Optional, defaults to "false". If true, will only consolidate if the neighbor
      *            Clusters also have ties between them (apart from having the same pitches, in the
      *            same order).
      */

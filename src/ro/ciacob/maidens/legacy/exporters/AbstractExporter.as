@@ -290,6 +290,7 @@ package ro.ciacob.maidens.legacy.exporters {
          */
         protected function buildVoiceData(voice:ProjectData, storage:Array):void {
             var duration:Fraction = null;
+            var dot:Fraction = null;
             lastTupletMarker = null;
             var mightHaveAnotherVoice:Boolean = (storage.length > 0);
             if (mightHaveAnotherVoice) {
@@ -306,7 +307,7 @@ package ro.ciacob.maidens.legacy.exporters {
                     // Dot
                     var dotSrc:String = (clusterNode.getContent(DataFields.DOT_TYPE) as String);
                     if (dotSrc != DataFields.VALUE_NOT_SET) {
-                        var dot:Fraction = Fraction.fromString(dotSrc);
+                        dot = Fraction.fromString(dotSrc);
                         var toAdd:Fraction = duration.multiply(dot) as Fraction;
                         duration = duration.add(toAdd) as Fraction;
                     }
@@ -406,7 +407,7 @@ package ro.ciacob.maidens.legacy.exporters {
                                 }
                                 var musicalNote:String = translateNote(duration, pitchName,
                                         (mustShowAlteration ? currentAlteration : PitchAlterationTypes.HIDE),
-                                        octaveIndex, mustTie);
+                                        octaveIndex, mustTie, dot);
                                 storage.push(musicalNote);
                             }
                         }
@@ -460,8 +461,8 @@ package ro.ciacob.maidens.legacy.exporters {
 
             // List of all parts to be drawn in the score
             if (ModelUtils.unifiedPartsList != null && ModelUtils.unifiedPartsList.length > 0) {
-                if (target['staves'] == null) {
-                    target['staves'] = [];
+                if (target.staves == null) {
+                    target.staves = [];
                 }
                 for (var i:int = 0; i < ModelUtils.unifiedPartsList.length; i++) {
                     var partData:Object = ModelUtils.unifiedPartsList[i];
@@ -473,7 +474,7 @@ package ro.ciacob.maidens.legacy.exporters {
                         }
                     }
                 }
-                sortStaves(target['staves'] as Array);
+                sortStaves(target.staves as Array);
             }
         }
 
@@ -665,15 +666,21 @@ package ro.ciacob.maidens.legacy.exporters {
          * 			The index of the octave. MAIDENS uses `4` as the middle octave.
          *
          * @param	tie
-         * 			Whether the note should be tied to the next one or not.
+         * 			Optional, default false. Whether the note should be tied to the next one or not.
+         * 
+         * @param   dot
+         *          Optional, default null. The duration of the augmentation dot, e.g. `1/2` for a single
+         *          dot or `3/4` for a double dot. A defined `0/1` dot is equivalent to a not defined
+         *          dot.
          *
          * Note: subclasses must override this method and provide an implementation.
          *
          * @return	The translated note or an equivalent.
          */
         protected function translateNote(
-                duration:Fraction, pitchName:String,
-                alteration:int, octaveIndex:int, tie:Boolean = false
+                duration:Fraction,
+                pitchName:String, alteration:int, octaveIndex:int,
+                tie:Boolean = false, dot:Fraction = null
             ):String {
             throw new Error("Method translateNote() must be overridden in a subclass.");
             return null;
