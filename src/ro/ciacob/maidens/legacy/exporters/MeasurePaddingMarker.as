@@ -131,11 +131,6 @@ package ro.ciacob.maidens.legacy.exporters {
             _paddingDurations.reverse();
         }
 
-        private function _onVoiceDataReady(data:Object):void {
-            PTT.getPipe(ViewPipes.MEASURE_PADDING_PIPE).unsubscribe(ViewKeys.VOICE_DATA_READY,
-                    _onVoiceDataReady);
-        }
-
         private function _queryVoiceData():void {
             var queryEngine:QueryEngine = ProjectData(_voice.root).queryEngine;
             var measure:ProjectData = ProjectData(_voice.dataParent);

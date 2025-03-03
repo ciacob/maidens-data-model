@@ -420,13 +420,6 @@ package ro.ciacob.maidens.legacy {
                 initialContent:Object = null
             ) {
             super(initialMetadata, initialContent);
-
-            // We ensure all data hierarchies maintain a single `QueryEngine` instance, built
-            // around their root element.
-            const isRoot:Boolean = (this === this.root);
-            _queryEngine = isRoot ?
-                new QueryEngine(ProjectData(this)) :
-                ProjectData(this.root).queryEngine;
         }
 
         /**
@@ -434,6 +427,18 @@ package ro.ciacob.maidens.legacy {
          * provide in-context querying abilities.
          */
         public function get queryEngine():QueryEngine {
+
+            // We ensure all data hierarchies maintain a single `QueryEngine` instance, built
+            // around their root element.
+            if (!this.root) {
+                return null;
+            }
+
+            const isRoot:Boolean = (this === this.root);
+            if (isRoot && !_queryEngine) {
+                _queryEngine = new QueryEngine(ProjectData(this));
+            }
+
             return _queryEngine;
         }
 

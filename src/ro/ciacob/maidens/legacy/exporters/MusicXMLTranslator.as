@@ -5,6 +5,8 @@ package ro.ciacob.maidens.legacy.exporters {
     import eu.claudius.iacob.music.helpers.Divisions;
     import ro.ciacob.utils.NumberUtil;
     import ro.ciacob.maidens.generators.constants.duration.DotTypes;
+    import ro.ciacob.maidens.generators.constants.pitch.PitchAlterationTypes;
+    import eu.claudius.iacob.music.wrappers.Pitch;
 
     public class MusicXMLTranslator {
         public function MusicXMLTranslator() {
@@ -98,17 +100,16 @@ package ro.ciacob.maidens.legacy.exporters {
         public static function toXMLNote(
                 duration:Fraction,
                 pitchName:String = null, alteration:int = 0, octaveIndex:int = 0,
-                tie:Boolean = false, dot : Fraction = null
+                tie:Boolean = false, dot:Fraction = null,
+                followsInChord:Boolean = false,
+                isInVoiceTwo: Boolean = false
             ):String {
-
-            // TARGETS:
-            // pitch:Pitch = null, accidental:String = null(?), tie:String = null
-            // inChord:Boolean = false (!),
-            // voice:String = null (!),
 
             var noteData:Object = {};
 
             if (duration) {
+                noteData.voice = isInVoiceTwo? '2' : '1';
+
                 // Note duration in MusicXML divisions
                 noteData.duration = Divisions.getDivisionsFor(Divisions.SAFE_DIVISIONS_VALUE, duration);
 
@@ -116,31 +117,49 @@ package ro.ciacob.maidens.legacy.exporters {
                 var graphicalDuration:Fraction = Divisions.getGraphicalTupletFraction(duration);
                 noteData.type = getXMLNoteType(graphicalDuration.denominator);
 
-                // How many dots to draw for this note. We only support the single (adds 1/2) or double (Adds 3/4) dots.
-                if (dot && dot.equals(Fraction.ZERO)) {
-                    noteData.numDots = (dot.equals(Fraction.fromString(DotTypes.SINGLE))? 1 : 2);
+                // How many dots to draw for this note. We only support the single (adds 1/2) or double
+                // (Adds 3/4) dots.
+                if (dot && !dot.equals(Fraction.ZERO)) {
+                    noteData.numDots = (dot.equals(Fraction.fromString(DotTypes.SINGLE)) ? 1 : 2);
                 }
-
             }
 
-            return JSON.stringify(noteData, null, '\t');
+            if (pitchName) {
+
+                // Note: MAIDENS only uses sharps for the time being.
+                if (alteration !== PitchAlterationTypes.HIDE) {
+                    noteData.alteration = alteration.toString();
+                    noteData.accidental = (alteration == 1) ? 'sharp' : '';
+                }
+                noteData.step = pitchName;
+                noteData.octave = octaveIndex.toString();
+                noteData.inChord = followsInChord;
+
+                if (tie) {
+                    // TODO:FIXME: properly identify the end of the tie, as well as interim 
+                    // tied notes, and generate "end" and "continue" tie types, respectively.
+                    noteData.tie = "start";
+                }
+            }
+
+            return JSON.stringify(noteData);
         }
 
         /**
          * Time signature information.
          */
-        public static function toXMLTimeSignature (timeSignature:Array) : String {
-            return JSON.stringify ({
-                beats: timeSignature[0],
-                beatType: timeSignature[1]
-            }, null, '\t');
+        public static function toXMLTimeSignature(timeSignature:Array):String {
+            return JSON.stringify({
+                        beats: timeSignature[0],
+                        beatType: timeSignature[1]
+                    });
         }
 
         /**
          * Information for custom bar types.
          */
-        public static function toXMLBarline (barType: String) : String {
-			return "to do";
+        public static function toXMLBarline(barType:String):String {
+            return "to do";
         }
 
     }

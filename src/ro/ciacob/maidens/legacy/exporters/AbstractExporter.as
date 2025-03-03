@@ -405,9 +405,16 @@ package ro.ciacob.maidens.legacy.exporters {
                                         persistentAlterations[pitchMark] = currentAlteration;
                                     }
                                 }
-                                var musicalNote:String = translateNote(duration, pitchName,
+                                var musicalNote:String = translateNote(
+                                        duration,
+                                        pitchName,
                                         (mustShowAlteration ? currentAlteration : PitchAlterationTypes.HIDE),
-                                        octaveIndex, mustTie, dot);
+                                        octaveIndex,
+                                        mustTie,
+                                        dot,
+                                        noteIdx > 0,
+                                        mightHaveAnotherVoice
+                                    );
                                 storage.push(musicalNote);
                             }
                         }
@@ -442,10 +449,10 @@ package ro.ciacob.maidens.legacy.exporters {
          * a target object. Resulting data is meant to populate "header" template fields.
          *
          * @param    project
-         *            The project to extract, and translate data form.
+         *           The project to extract, and translate data form.
          *
          * @param    target
-         *            The object to write translated data into.
+         *           The object to write translated data into.
          */
         protected function buildHeaderData(project:ProjectData, target:Object):void {
             // Generic project data
@@ -667,11 +674,21 @@ package ro.ciacob.maidens.legacy.exporters {
          *
          * @param	tie
          * 			Optional, default false. Whether the note should be tied to the next one or not.
-         * 
+         *
          * @param   dot
          *          Optional, default null. The duration of the augmentation dot, e.g. `1/2` for a single
          *          dot or `3/4` for a double dot. A defined `0/1` dot is equivalent to a not defined
          *          dot.
+         * 
+         * @param   followsInChord
+         *          Optional, default false. Whether this note is a subsequent note in a chord. E.g., in 
+         *          a C, E, G chord, `followsInChord` will be `false` for the `C`, and `true` for `E`
+         *          and `G`.
+         * 
+         * @param   isInVoiceTwo
+         *          Optional, default false. Whether this note lies in the second voice of its home
+         *          staff. As MAIDENS only supports two voices per staff, there is no third option
+         *          than being or not in voice two.
          *
          * Note: subclasses must override this method and provide an implementation.
          *
@@ -680,7 +697,9 @@ package ro.ciacob.maidens.legacy.exporters {
         protected function translateNote(
                 duration:Fraction,
                 pitchName:String, alteration:int, octaveIndex:int,
-                tie:Boolean = false, dot:Fraction = null
+                tie:Boolean = false, dot:Fraction = null,
+                followsInChord: Boolean = false,
+                isInVoiceTwo: Boolean = false
             ):String {
             throw new Error("Method translateNote() must be overridden in a subclass.");
             return null;

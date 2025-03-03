@@ -74,7 +74,9 @@ package ro.ciacob.maidens.legacy.exporters {
         override protected function translateNote(
                 duration:Fraction,
                 pitchName:String, alteration:int, octaveIndex:int,
-                tie:Boolean = false, dot:Fraction = null
+                tie:Boolean = false, dot:Fraction = null,
+                followsInChord: Boolean = false,
+                isInVoiceTwo: Boolean = false
             ):String {
 
             return ABCTranslator.translateNote(

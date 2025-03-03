@@ -62,67 +62,33 @@ package ro.ciacob.maidens.legacy.exporters {
          *          written to an *.xml file.
          */
         override public function export(data:DataElement, shallow:Boolean = false, isRecursiveCall:Boolean = false):* {
+
             var project:ProjectData = (data as ProjectData);
             if (project && ModelUtils.isProject(project)) {
+                
                 super.resetAll();
                 ModelUtils.updateUnifiedPartsList(project);
                 const interimData:Object = super.buildTemplateData(project);
 
                 trace(JSON.stringify(interimData, null, '\t'));
 
-                // TITLE
-                const title:String = project.getContent(DataFields.PROJECT_NAME) as String;
+                // Identification section
+                const creators:Vector.<Creator> = Vector.<Creator>([
+                            new Creator('composer', interimData.composerName)
+                        ]);
+                const misc:Vector.<Misc> = Vector.<Misc>([
+                            new Misc("creation timestamp", interimData.creationTimestamp),
+                            new Misc("modification timestamp", interimData.modificationTimestamp),
+                            new Misc("copyright note", interimData.copyrightNote),
+                            new Misc("custom notes", interimData.customNotes)
+                        ]);
+                const identification:Identification = new Identification(creators,
+                        Descriptor.getAppSignature(true), interimData.modificationTimestamp, misc);
 
-                // IDENTIFICATION
-                // Creators
-                const creators:Vector.<Creator> = new Vector.<Creator>;
-                const composerName:String = project.getContent(DataFields.COMPOSER_NAME) as String;
-                if (composerName && composerName !== DataFields.VALUE_NOT_SET) {
-                    creators.push(new Creator('composer', composerName));
-                }
-
-                // Encoding
-                const defaultTime:String = Time.toFormat(Time.now, Time.TIMESTAMP_DEFAULT);
-                const encoder:String = Descriptor.getAppSignature(true);
-
-                var encodingDate:String = project.getContent(DataFields.MODIFICATION_TIMESTAMP) as String;
-                if (!encodingDate || encodingDate === DataFields.VALUE_NOT_SET) {
-                    encodingDate = defaultTime;
-                }
-
-                // Miscellaneous
-                const misc:Vector.<Misc> = new Vector.<Misc>;
-
-                var creationTime:String = project.getContent(DataFields.CREATION_TIMESTAMP) as String;
-                if (!creationTime || creationTime === DataFields.VALUE_NOT_SET) {
-                    creationTime = defaultTime;
-                }
-
-                var modificationTime:String = project.getContent(DataFields.MODIFICATION_TIMESTAMP) as String;
-                if (!modificationTime || modificationTime === DataFields.VALUE_NOT_SET) {
-                    modificationTime = defaultTime;
-                }
-
-                misc.push(
-                        new Misc("creation timestamp", creationTime),
-                        new Misc("modification timestamp", modificationTime)
-                    );
-
-                var copyrightNote:String = project.getContent(DataFields.COPYRIGHT_NOTE) as String;
-                if (copyrightNote && copyrightNote !== DataFields.VALUE_NOT_SET) {
-                    misc.push(new Misc("copyright note", copyrightNote));
-                }
-
-                var customNotes:String = project.getContent(DataFields.CUSTOM_NOTES) as String;
-                if (customNotes && customNotes !== DataFields.VALUE_NOT_SET) {
-                    misc.push(new Misc("custom notes", customNotes));
-                }
-
-                const identification:Identification = new Identification(creators, encoder, encodingDate, misc);
-
-                // Assemble and return an equivalent Score instance.
+                // Score
                 const score:Score = new Score(
-                        title, identification,
+                        interimData.projectName,
+                        identification,
                         SCORE_WIDTH, SCORE_HEIGHT,
                         SCORE_MARGINS, SCORE_SCALING,
                         _buildPartsInfo(project),
@@ -170,13 +136,21 @@ package ro.ciacob.maidens.legacy.exporters {
          * Translates a MAIDENS note into a Music XML format note.
          * @see AbstractExporter.translateNote
          */
-        override protected function translateNote (
+        override protected function translateNote(
                 duration:Fraction,
                 pitchName:String, alteration:int, octaveIndex:int,
-                tie:Boolean = false, dot:Fraction = null
+                tie:Boolean = false, dot:Fraction = null,
+                followsInChord:Boolean = false,
+                isInVoiceTwo:Boolean = false
             ):String {
-            
-            return MusicXMLTranslator.toXMLNote (duration, pitchName, alteration, octaveIndex, tie, dot);
+
+            return MusicXMLTranslator.toXMLNote(
+                    duration,
+                    pitchName, alteration, octaveIndex,
+                    tie, dot,
+                    followsInChord,
+                    isInVoiceTwo
+                );
         }
 
         /**
@@ -191,7 +165,7 @@ package ro.ciacob.maidens.legacy.exporters {
          * Translates a MAIDENS rest into a MusicXML format rest.
          */
         override protected function translateRest(duration:Fraction, visibleRest:Boolean = true):String {
-            return MusicXMLTranslator.toXMLNote (duration);
+            return MusicXMLTranslator.toXMLNote(duration);
         }
 
         /**
